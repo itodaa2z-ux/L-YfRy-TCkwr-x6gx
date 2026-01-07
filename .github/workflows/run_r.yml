@@ -1,0 +1,34 @@
+name: R Auto Scrape
+
+on:
+  workflow_dispatch:      # 手動でボタンを押してテスト実行できるようにする設定
+  schedule:
+    - cron: '0 3 * * *'   # 毎日 日本時間の昼12:00 (UTC 3:00) に自動実行
+
+permissions:
+  contents: write         # データを保存（書き込み）する権限を与える
+
+jobs:
+  run-r-script:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. リポジトリのファイルを取ってくる
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. R言語を使えるようにする
+      - name: Setup R
+        uses: r-lib/actions/setup-r@v2
+
+      # 3. Rのスクリプトを実行する
+      - name: Run R script
+        run: Rscript main.R
+
+      # 4. 生成されたCSVを保存（Commit & Push）する
+      - name: Commit and Push
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git add data_log.csv
+          git commit -m "データ更新" || echo "変更なし"
+          git push
